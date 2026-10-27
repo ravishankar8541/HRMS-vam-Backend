@@ -129,7 +129,12 @@ const employeeSchema = new mongoose.Schema(
     educationProof: { type: String },
     experienceLetter: { type: String },
     bgVerification: { type: Boolean, default: false },
-    onboardingStatus: { type: String, default: 'Pending' }
+    onboardingStatus: { type: String, default: 'Pending' },
+    status: {
+      type: String,
+      enum: ["Active", "Non Active"],
+      default: "Active",
+    }
   },
   {
     timestamps: true,

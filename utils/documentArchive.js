@@ -15,7 +15,9 @@ const inFlight = new Map();
 function fingerprint(type, data) {
   const values = { ...data };
   for (const key of ['updatedAt', '__v', 'emailStatus', 'netPayWords']) delete values[key];
-  return createHash('sha256').update(type + JSON.stringify(values, Object.keys(values).sort())).digest('hex');
+  // Regenerate salary snapshots when the template changes; retain past deliveries.
+  const templateVersion = type === 'Salary Slip' ? ':template-v3:' : '';
+  return createHash('sha256').update(type + templateVersion + JSON.stringify(values, Object.keys(values).sort())).digest('hex');
 }
 async function readPDF(doc) {
   const url = cloudinary.utils.private_download_url(doc.publicId, '', { resource_type: 'raw', type: 'authenticated', expires_at: Math.floor(Date.now()/1000)+60 });

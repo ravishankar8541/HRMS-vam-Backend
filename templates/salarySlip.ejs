@@ -26,7 +26,7 @@
             margin-bottom: 12px;
         }
         .logo {
-            height: 85px;
+            height: 120px;
             width: auto;
             max-width: 300px;
             object-fit: contain;
@@ -64,7 +64,7 @@
             width: 100%;
             border-collapse: collapse;
             border: 1px solid #000000;
-            margin-bottom: 14px;
+            margin-bottom: 28px;
             background-color: #ffffff;
         }
         .emp-table td {
@@ -85,7 +85,7 @@
             width: 100%;
             border-collapse: collapse;
             border: 1px solid #000000;
-            margin-bottom: 14px;
+            margin-bottom: 28px;
             background-color: #ffffff;
         }
         .salary-table th {
@@ -232,40 +232,40 @@
             <tbody>
                 <tr>
                     <td>Basic Salary</td>
-                    <td class="amount"><%= basicSalary || '0.00' %></td>
+                    <td class="amount"><%= basicSalary || '0' %></td>
                     <td style="border-left: 1px solid #d1d5db;">Loss of Pay (LOP)</td>
-                    <td class="amount"><%= lopAmount || '0.00' %></td>
+                    <td class="amount"><%= lopAmount || '0' %></td>
                 </tr>
                 <tr>
                     <td>House Rent Allowance (HRA)</td>
-                    <td class="amount"><%= allowance || '0.00' %></td>
+                    <td class="amount"><%= allowance || '0' %></td>
                     <td style="border-left: 1px solid #d1d5db;">Provident Fund (PF)</td>
-                    <td class="amount"><%= pfDeduction || '0.00' %></td>
+                    <td class="amount"><%= pfDeduction || '0' %></td>
                 </tr>
                 <tr>
                     <td>Special Allowance & Conveyance</td>
-                    <td class="amount">0.00</td>
+                    <td class="amount">0</td>
                     <td style="border-left: 1px solid #d1d5db;">Tax Deducted at Source (TDS)</td>
-                    <td class="amount">0.00</td>
+                    <td class="amount">0</td>
                 </tr>
                 <tr>
                     <td>Performance Bonus & Incentives</td>
-                    <td class="amount"><%= bonus || '0.00' %></td>
+                    <td class="amount"><%= bonus || '0' %></td>
                     <td style="border-left: 1px solid #d1d5db;">Other Deductions</td>
-                    <td class="amount"><%= otherDeduction || '0.00' %></td>
+                    <td class="amount"><%= otherDeduction || '0' %></td>
                 </tr>
                 <tr class="total-row">
                     <td>GROSS EARNINGS</td>
-                    <td class="amount">₹ <%= grossEarnings || '0.00' %></td>
+                    <td class="amount">₹ <%= grossEarnings || '0' %></td>
                     <td style="border-left: 1px solid #000000;">TOTAL DEDUCTIONS</td>
-                    <td class="amount">₹ <%= totalDeductions || '0.00' %></td>
+                    <td class="amount">₹ <%= totalDeductions || '0' %></td>
                 </tr>
             </tbody>
         </table>
 
         <div class="net-pay-box">
             <div class="net-pay-title">Net Take-Home Pay</div>
-            <div class="net-pay-value">₹ <%= netPayable || '0.00' %></div>
+            <div class="net-pay-value">₹ <%= netPayable || '0' %></div>
             <div class="net-pay-words">(Rupees <%= netPayWords || 'Zero' %> Only)</div>
         </div>
 

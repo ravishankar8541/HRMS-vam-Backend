@@ -97,6 +97,13 @@ const createSalarySlip = async (req, res) => {
   }
 };
 
+const sendSalarySlipRecord = async (salaryRecord) => {
+  await sendSalarySlipEmail(salaryRecord.employeeEmail, await archive.emailData('Salary Slip', salaryRecord));
+  salaryRecord.emailStatus = 'Sent';
+  await salaryRecord.save();
+  return salaryRecord;
+};
+
 const sendSalaryEmail = async (req, res) => {
   try {
     const { id } = req.params;
@@ -144,10 +151,7 @@ const sendSalaryEmail = async (req, res) => {
       netPayWords: netPayWords,
     };
 
-    await sendSalarySlipEmail(salaryRecord.employeeEmail, await archive.emailData('Salary Slip', salaryRecord));
-
-    salaryRecord.emailStatus = 'Sent';
-    await salaryRecord.save();
+    await sendSalarySlipRecord(salaryRecord);
 
     return res.json({ success: true, message: "Email sent successfully" });
   } catch (err) {
@@ -159,4 +163,5 @@ const sendSalaryEmail = async (req, res) => {
 module.exports = {
   createSalarySlip,
   sendSalaryEmail,
+  sendSalarySlipRecord,
 };

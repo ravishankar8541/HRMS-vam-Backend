@@ -3,14 +3,7 @@ const pdf = require('./pdfEngine');
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');
-
-const formatINR = (val) => {
-  const num = Math.round((Number(val) || 0) * 100) / 100;
-  return num.toLocaleString('en-IN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
+const { formatINR, getNetPayWords } = require('./salarySlipFormatting');
 
 const getAssetBase64 = (filename) => {
   const searchPaths = [
@@ -47,7 +40,7 @@ const sendSalarySlip = async (email, data) => {
       hrSignature: hrSignatureBase64,
       companyName: 'VIRAL ADS MEDIA',
       payMonth: data.monthYear || '—',
-      netPayWords: data.netPayWords || "",
+      netPayWords: getNetPayWords(data.netPayable),
       employeeName: data.employeeName || '—',
       employeeId: data.employeeId || '—',
       designation: data.designation || '—',

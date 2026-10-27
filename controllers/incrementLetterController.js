@@ -1,7 +1,28 @@
 const archive = require('../utils/documentArchive');
 const errorStatus = require('../utils/errorStatus');
 const IncrementLetter = require('../models/IncrementLetter');
+const Employee = require('../models/Employee');
+const mongoose = require('mongoose');
 const sendIncrementLetter = require('../utils/incrementEmailService');
+
+// The letter can be linked directly, or matched by the employee's registered email / employee ID.
+const resolveEmployee = async (record) => {
+  if (mongoose.isValidObjectId(record.employee)) {
+    const linked = await Employee.findById(record.employee);
+    if (linked) return linked;
+  }
+  const email = String(record.emailId || '').trim().toLowerCase();
+  if (email) {
+    const byEmail = await Employee.findOne({ email });
+    if (byEmail) return byEmail;
+  }
+  const empId = String(record.employeeId || '').trim().toUpperCase();
+  if (empId && empId !== 'N/A') {
+    const byId = await Employee.findOne({ empId });
+    if (byId) return byId;
+  }
+  return null;
+};
 
 exports.createIncrement = async (req, res) => {
   try {
@@ -82,11 +103,41 @@ exports.sendEmail = async (req, res) => {
     await sendIncrementLetter(recipient, await archive.emailData('Increment Letter', record));
 
     record.emailStatus = 'Sent';
+
+    let employee = null;
+    try {
+      employee = await resolveEmployee(record);
+      if (employee && !record.employee) record.employee = employee._id;
+    } catch (error) {
+      console.error('Resolve employee after increment email error:', error);
+    }
     await record.save();
+
+    let salaryUpdated = false;
+    if (employee && Number.isFinite(Number(record.newSalary))) {
+      try {
+        // Never let an older letter overwrite a newer increment that was already applied.
+        const newer = await IncrementLetter.exists({
+          _id: { $ne: record._id },
+          emailStatus: 'Sent',
+          effectiveDate: { $gt: record.effectiveDate },
+          $or: [{ emailId: record.emailId }, ...(record.employee ? [{ employee: record.employee }] : [])],
+        });
+        if (!newer) {
+          employee.salary = Number(record.newSalary);
+          await employee.save();
+          salaryUpdated = true;
+        }
+      } catch (error) {
+        console.error('Salary sync after increment email error:', error);
+      }
+    }
 
     return res.json({
       success: true,
-      message: `Increment letter sent successfully to ${recipient}`
+      message: `Increment letter sent successfully to ${recipient}`,
+      salaryUpdated,
+      employeeMatched: Boolean(employee)
     });
   } catch (error) {
     console.error('Send Increment Email Error:', error);

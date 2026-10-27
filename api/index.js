@@ -90,7 +90,10 @@ if (!process.env.JWT_SECRET) {
 const start = dbConnection();
 
 if (require.main === module) {
-  start.then(() => app.listen(PORT, () => console.log(`Server listening on ${PORT}`)));
+  start.then(() => {
+    app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
+    require('../utils/monthlySalaryScheduler').start();
+  });
 }
 
 module.exports = app;

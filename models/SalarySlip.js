@@ -105,6 +105,11 @@ ifsc: {
   },
   generatedBy: {
     type: String
+  },
+  // Set when HR removes an auto-prepared payslip from the vault.
+  hiddenAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true

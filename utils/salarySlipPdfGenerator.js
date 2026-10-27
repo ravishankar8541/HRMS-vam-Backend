@@ -2,6 +2,7 @@ const pdf = require('./pdfEngine');
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs');
+const { formatINR, getNetPayWords } = require('./salarySlipFormatting');
 
 const generateSalarySlipPDF = async (data) => {
   try {
@@ -22,7 +23,7 @@ const generateSalarySlipPDF = async (data) => {
       companyName: 'VIRAL ADS MEDIA',
       companyAddress: 'B-27, Budh Vihar Phase 1, New Delhi-110086',
       payMonth: data.monthYear || '—',
-      netPayWords: data.netPayWords || require("number-to-words").toWords(Math.round(data.netPayable || 0)), 
+      netPayWords: getNetPayWords(data.netPayable),
       employeeName: data.employeeName || '—',
       employeeId: data.employeeId || '—',
       designation: data.designation || '—',
@@ -34,15 +35,15 @@ const generateSalarySlipPDF = async (data) => {
       phone: data.phone || '—',
       workingDays: data.workingDays || 30,
       lopDays: data.lopDays || 0,
-      basicSalary: Number(data.basicSalary || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }),
-      allowance: Number(data.allowance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }),
-      bonus: Number(data.bonus || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }),
-      lopAmount: Number(data.lopAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }),
-      pfDeduction: Number(data.pfDeduction || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }),
-      otherDeduction: Number(data.otherDeduction || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }),
-      grossEarnings: Number(data.grossEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }),
-      totalDeductions: Number(data.totalDeductions || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }),
-      netPayable: Number(data.netPayable || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }),
+      basicSalary: formatINR(data.basicSalary),
+      allowance: formatINR(data.allowance),
+      bonus: formatINR(data.bonus),
+      lopAmount: formatINR(data.lopAmount),
+      pfDeduction: formatINR(data.pfDeduction),
+      otherDeduction: formatINR(data.otherDeduction),
+      grossEarnings: formatINR(data.grossEarnings),
+      totalDeductions: formatINR(data.totalDeductions),
+      netPayable: formatINR(data.netPayable),
       hrName: 'Authorised Signatory'
     });
 
