@@ -4,7 +4,7 @@ const errorStatus = require('../utils/errorStatus');
 const sendAppointmentLetter = require('../utils/appointmentEmailService');
 const AppointmentLetter = require('../models/AppointmentLetter');
 
-// STEP 1: Create the record in DB
+// STEP 1: Create the record in DB new 
 const createAppointment = async (req, res) => {
     try {
         const { employeeName, fathersName, address, position, salary, joiningDate, hrName, phone,
