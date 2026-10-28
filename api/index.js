@@ -1,7 +1,8 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express = require('express');
 const app = express();
-const path = require('path');
+const mongoose = require('mongoose');
 const cors = require('cors');
 const dbConnection = require('../config/db');
 
@@ -71,7 +72,14 @@ app.use('/api/documents', authenticate, documentRoutes);
 app.use('/api/offboarding', authenticate, staffOnly, require('../routes/offboarding'));
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'active', timestamp: new Date() });
+  const readyState = mongoose.connection.readyState;
+  const connected = readyState === 1;
+  const database = ['disconnected', 'connected', 'connecting', 'disconnecting'][readyState] || 'unknown';
+  res.status(connected ? 200 : 503).json({
+    status: connected ? 'active' : 'unavailable',
+    database,
+    timestamp: new Date(),
+  });
 });
 
 app.use((err, req, res, next) => {
@@ -106,13 +114,21 @@ const startServer = () => {
 
 // cPanel/Passenger loads the entry file with require(), so require.main !== module there.
 const runningUnderPassenger = Boolean(process.env.PASSENGER_APP_ENV || process.env.PASSENGER_BASE_URI);
+const runningUnderLiteSpeed = Boolean(
+  process.env.LSNODE_ROOT ||
+  process.env.LSNODE_STARTUP_FILE ||
+  process.env.LSNODE_SOCKET ||
+  /(?:^|[\\/])lsnode\.js$/i.test(module.parent?.filename || '')
+);
 
-if (require.main === module || runningUnderPassenger) {
+if (require.main === module || runningUnderPassenger || runningUnderLiteSpeed) {
   startServer().catch(error => {
     console.error('Server startup failed:', error);
     process.exit(1);
   });
 }
 
-module.exports = app;
+// LiteSpeed calls an exported app.listen() immediately after require(). Export only
+// the startup function there so our awaited database connection controls listening.
+module.exports = runningUnderLiteSpeed ? { startServer } : app;
 module.exports.startServer = startServer;

@@ -2,6 +2,14 @@
 
 Use Node 24 (minimum 22.12). Run `npm ci` in each project. Configure the backend using `.env.example`; configure the frontend `VITE_API_URL` with the deployed backend URL ending in `/api`, then rebuild it. Set backend `FRONTEND_URL` to the exact frontend origin, or a comma-separated list. The local environment had service credentials but no frontend origin configured.
 
+## MilesWeb startup and deployment
+
+Use the backend directory containing `package.json` as the application root and `server.js` as the startup file. LiteSpeed loading `api/index.js` directly is also supported: the app starts its database connection explicitly and prevents the hosting loader from opening a listener before that connection completes. Environment files are loaded from the backend root regardless of the working directory; hosting environment variables retain precedence.
+
+After pushing to GitHub, update the checkout in the actual MilesWeb application root (cPanel Git Version Control: Update from Remote), install dependencies in the app's Node.js environment, then restart that app. Restarting alone does not fetch GitHub changes. If the Git checkout and application root differ, deploy the updated files into the application root before restarting.
+
+Successful startup logs `Database Connected Successfully` followed by `Server listening...`. `/health` now includes `database: "connected"` with HTTP 200; an observed disconnected/connecting state returns HTTP 503. This endpoint reports Mongoose's connection state, not a separate database ping. A response containing only `status` and `timestamp` indicates the old health handler is still serving requests. Initial connection failures stop startup and must be resolved using the new server logs; the startup fix cannot repair a missing package, invalid `MONGO_URI`, or blocked network access.
+
 ## Document Wallet
 
 All wallet operations require a valid login. List, preview and ZIP queries use the email from the database account, never a supplied query email or JWT role. This applies to HR/admin wallets too. Employee accounts cannot access employee management, payroll or letter-creation APIs. Account creation requires an existing HR/admin session; only administrators can create administrators.

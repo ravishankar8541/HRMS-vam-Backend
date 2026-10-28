@@ -1,5 +1,5 @@
-// Entry point for cPanel/Passenger and normal `npm start` deployments.
-// Passenger loads startup files with require(), so api/index.js cannot rely on require.main.
+// Entry point for cPanel/LiteSpeed, Passenger and normal `npm start` deployments.
+// Hosting loaders use require(), so api/index.js cannot rely on require.main alone.
 const app = require('./api/index');
 
 app.startServer().catch(error => {
