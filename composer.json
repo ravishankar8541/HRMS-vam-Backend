@@ -1,0 +1,8 @@
+{
+    "name": "vam/hrms-pdf",
+    "description": "mPDF dependency for HRMS server-side PDF rendering (used by utils/pdf.php)",
+    "type": "project",
+    "require": {
+        "mpdf/mpdf": "^8.1"
+    }
+}

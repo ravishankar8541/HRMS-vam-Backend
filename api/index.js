@@ -87,13 +87,32 @@ if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET is required');
 }
 
-const start = dbConnection();
+let startup = null;
 
-if (require.main === module) {
-  start.then(() => {
-    app.listen(PORT, () => console.log(`Server listening on ${PORT}`));
-    require('../utils/monthlySalaryScheduler').start();
+const startServer = () => {
+  if (!startup) {
+    startup = (async () => {
+      await dbConnection();
+      const server = app.listen(PORT, () => console.log(`Server listening on ${PORT} (Node ${process.version})`));
+      require('../utils/monthlySalaryScheduler').start();
+      return server;
+    })().catch(error => {
+      startup = null;
+      throw error;
+    });
+  }
+  return startup;
+};
+
+// cPanel/Passenger loads the entry file with require(), so require.main !== module there.
+const runningUnderPassenger = Boolean(process.env.PASSENGER_APP_ENV || process.env.PASSENGER_BASE_URI);
+
+if (require.main === module || runningUnderPassenger) {
+  startServer().catch(error => {
+    console.error('Server startup failed:', error);
+    process.exit(1);
   });
 }
 
 module.exports = app;
+module.exports.startServer = startServer;

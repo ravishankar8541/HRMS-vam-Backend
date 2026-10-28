@@ -1,23 +1,28 @@
-// Compatibility adapter for the existing templates, using maintained Chromium.
+// Compatibility adapter for the existing templates. Renders via PHP mPDF
+// (utils/pdf.php) because Puppeteer's Chromium needs system libraries that
+// shared hosting does not provide.
+const { execFile } = require('child_process');
+const path = require('path');
+
+const PHP = process.env.PHP_EXECUTABLE_PATH || 'php';
+const SCRIPT = path.join(__dirname, 'pdf.php');
+
 let queue = Promise.resolve();
-async function render(html, options) {
-  const puppeteer = require('puppeteer');
-  const browser = await puppeteer.launch({
-    headless: true,
-    ...(process.env.PUPPETEER_EXECUTABLE_PATH ? { executablePath: process.env.PUPPETEER_EXECUTABLE_PATH } : {}),
-    args: process.env.PUPPETEER_NO_SANDBOX === 'true' ? ['--no-sandbox'] : [],
+
+function render(html, options) {
+  return new Promise((resolve, reject) => {
+    const args = [SCRIPT, JSON.stringify({ format: options.format || 'A4', border: options.border || null })];
+    execFile(PHP, args, { encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 }, (error, stdout) => {
+      if (error) {
+        return reject(new Error(
+          `PDF render failed (run "composer install" in the backend root on the server): ${error.message}`
+        ));
+      }
+      resolve(stdout);
+    }).stdin.end(html);
   });
-  try {
-    const page = await browser.newPage();
-    await page.setJavaScriptEnabled(false);
-    await page.setRequestInterception(true);
-    page.on('request', req => /^(data:|about:)/.test(req.url()) ? req.continue() : req.abort());
-    await page.setContent(html, { waitUntil: 'load', timeout: 30000 });
-    const margin = typeof options.border === 'string'
-      ? Object.fromEntries(['top','right','bottom','left'].map(k => [k, options.border])) : options.border;
-    return Buffer.from(await page.pdf({ format: options.format || 'A4', margin, printBackground: true }));
-  } finally { await browser.close(); }
 }
+
 exports.create = (html, options = {}) => ({
   toBuffer(callback) {
     const job = queue.then(() => render(html, options));

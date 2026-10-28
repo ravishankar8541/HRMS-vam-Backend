@@ -14,7 +14,7 @@ Existing letter records have no trustworthy attachment/delivery history and are 
 
 Employee create/update and onboarding uploads use authenticated Cloudinary image/raw storage. JPEG, PNG and PDF uploads are limited to 10 MB each. Failed database requests clean up newly uploaded assets. Old local files remain available through authenticated staff access; they are not automatically moved or deleted. Signed upload URLs act as bearer links and should not be shared. PDF upload URLs expire after one hour; refreshing the employee list issues new links. Wallet PDFs are served through an ownership-checked backend endpoint.
 
-PDF templates now use Puppeteer/Chromium rather than PhantomJS. `npx puppeteer browsers install chrome` installs the local browser if needed; Docker uses system Chromium. PDF jobs run sequentially to limit concurrent browser memory use. Do not use this queue as a substitute for a durable worker at high email volume.
+PDF templates render through PHP mPDF (`utils/pdf.php`, driven by `utils/pdfEngine.js`) rather than a headless browser: Chromium's system libraries are unavailable on the shared cPanel host. Run `composer install` in the backend root so mPDF is available. PDF jobs still run sequentially to limit memory use. Do not use this queue as a substitute for a durable worker at high email volume.
 
 ## FnF and offboarding
 
