@@ -50,7 +50,7 @@ const monthEntry = (year, month) => ({ year, month, monthYear: monthKey(year, mo
 const run = async (monthList) => {
   if (!monthList.length) return { created: 0 };
 
-  const employees = await Employee.find({ salary: { $gt: 0 } })
+  const employees = await Employee.find({ salary: { $gt: 0 }, status: { $ne: 'Non Active' } })
     .select('name email empId designation dateOfJoining dateOfExit salary panNumber adharNumber accountNumber ifscCode phoneNumber')
     .lean();
   if (!employees.length) return { created: 0 };
