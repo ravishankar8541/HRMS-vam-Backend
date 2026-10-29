@@ -6,7 +6,7 @@
     <style>
       @page {
     size: A4;
-    margin: 0.15in 0.25in;
+    margin: 0.35in 0.55in;
 }
 
 body {
@@ -15,15 +15,6 @@ body {
     margin: 0;
     padding: 0;
     line-height: 1.6;
-}
-
-.page-container {
-    padding: 0.2in 0.3in;
-    position: relative;
-}
-
-.page-break {
-    page-break-before: always;
 }
 
 .header-table {
@@ -91,20 +82,17 @@ body {
 
 .clause-item {
     margin-bottom: 8px;
-    display: table;
-    width: 100%;
+    padding-left: 40px;
+    text-indent: -40px;
 }
 
 .clause-num {
-    display: table-cell;
-    width: 40px;
+    display: inline;
     font-weight: bold;
-    vertical-align: top;
 }
 
 .clause-text {
-    display: table-cell;
-    vertical-align: top;
+    display: inline;
 }
 
 .notice-period {
@@ -142,7 +130,7 @@ body {
 
 <body>
 
-    <div class="page-container">
+    <div>
         <table class="header-table">
             <tr>
                 <td class="logo-box"><img src="<%= logo %>" class="logo"></td>
@@ -221,7 +209,7 @@ body {
       
     </div>
 
-    <div class="page-container page-break">
+    <div>
         <div class="content-body">
            
             <div class="clause-item">
@@ -297,7 +285,7 @@ Information.  </div>
       
     </div>
 
-    <div class="page-container page-break">
+    <div>
         <div class="content-body">
             
            
