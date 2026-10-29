@@ -15,8 +15,9 @@ const inFlight = new Map();
 function fingerprint(type, data) {
   const values = { ...data };
   for (const key of ['updatedAt', '__v', 'emailStatus', 'netPayWords']) delete values[key];
-  // Regenerate salary snapshots when the template changes; retain past deliveries.
-  const templateVersion = type === 'Salary Slip' ? ':template-v3:' : '';
+  // Snapshot keys hash record data only, so bump these after a template fix to drop stored PDFs; past deliveries are retained.
+  const templateVersions = { 'Salary Slip': 'v3', 'Appointment Letter': 'v2', 'Increment Letter': 'v2', 'Termination Letter': 'v2' };
+  const templateVersion = templateVersions[type] ? `:template-${templateVersions[type]}:` : '';
   return createHash('sha256').update(type + templateVersion + JSON.stringify(values, Object.keys(values).sort())).digest('hex');
 }
 async function readPDF(doc) {

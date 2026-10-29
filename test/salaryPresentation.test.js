@@ -98,18 +98,26 @@ test('salary email shows rounded pay and preserves the archived PDF attachment',
   assert.equal(snapshotId, 'salary-snapshot');
 });
 
-test('salary presentation revision invalidates old snapshots without changing other document hashes', () => {
+test('template revision tags invalidate only the documents whose layout changed', () => {
   const { fingerprint } = require('../utils/documentArchive');
   const data = { employeeName: 'Test Employee', netPayable: 74666.67 };
   const serialized = JSON.stringify(data);
   const legacyHash = type => createHash('sha256').update(type + serialized).digest('hex');
 
-  assert.notEqual(fingerprint('Salary Slip', data), legacyHash('Salary Slip'));
-  assert.equal(
-    fingerprint('Salary Slip', data),
-    createHash('sha256').update('Salary Slip:template-v3:' + serialized).digest('hex'),
-  );
-  for (const type of ['Offer Letter', 'Appointment Letter', 'Increment Letter', 'FNF Settlement']) {
+  for (const [type, version] of Object.entries({
+    'Salary Slip': 'v3',
+    'Appointment Letter': 'v2',
+    'Increment Letter': 'v2',
+    'Termination Letter': 'v2',
+  })) {
+    assert.notEqual(fingerprint(type, data), legacyHash(type), type);
+    assert.equal(
+      fingerprint(type, data),
+      createHash('sha256').update(`${type}:template-${version}:` + serialized).digest('hex'),
+      type,
+    );
+  }
+  for (const type of ['Offer Letter', 'FNF Settlement', 'Onboarding Report']) {
     assert.equal(fingerprint(type, data), legacyHash(type), type);
   }
   assert.equal(fingerprint('Salary Slip', {
