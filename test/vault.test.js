@@ -33,6 +33,33 @@ test('missing and invalid vault entries cannot be deleted', async t => {
   }
 });
 
+test('bulk vault delete removes every selected entry and counts the ones already gone', async t => {
+  const gone = '507f1f77bcf86cd799439012';
+  t.mock.method(Delivery, 'findOneAndUpdate', async filter =>
+    filter._id === params.id ? { _id: filter._id, docType: filter.docType } : null);
+  const res = response();
+  await documents.bulkDeleteDocuments({ user: { role: 'hr' }, body: { documents: [
+    { _id: params.id, docType: 'Offer Letter' }, { _id: gone, docType: 'Offer Letter' }] } }, res);
+  assert.equal(res.code, 200);
+  assert.equal(res.body.removed, 1);
+  assert.equal(res.body.missing, 1);
+});
+
+test('bulk vault delete rejects non-staff callers and malformed selections', async () => {
+  const entries = [
+    [{ role: 'employee' }, [{ _id: params.id, docType: 'Offer Letter' }], 403],
+    [{ role: 'hr' }, [], 400],
+    [{ role: 'hr' }, [{ _id: 'bad-id', docType: 'Offer Letter' }], 400],
+    [{ role: 'hr' }, [{ _id: params.id }], 400],
+    [{ role: 'hr' }, Array.from({ length: 101 }, (_, i) => ({ _id: params.id, docType: 'Offer Letter', i })), 400],
+  ];
+  for (const [user, selected, code] of entries) {
+    const res = response();
+    await documents.bulkDeleteDocuments({ user, body: { documents: selected } }, res);
+    assert.equal(res.code, code, JSON.stringify(user));
+  }
+});
+
 test('deleted entries cannot be previewed, downloaded, or edited', async t => {
   t.mock.method(Delivery,'findOne',filter=>{
     assert.equal(filter.deletedAt,null);

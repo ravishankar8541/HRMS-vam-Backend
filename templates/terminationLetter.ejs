@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Termination of Employment</title>
     <style>
-        @page { size: A4; margin: 0.5in 0.6in 0.4in 0.6in; }
+        @page { margin: 0.5in 0.6in 0.4in 0.6in; }
         html, body { margin: 0; padding: 0; background-color: #ffffff; }
         body { 
             font-family: 'Times New Roman', Times, serif; 
@@ -66,21 +66,11 @@
             margin-top: 4px;
             margin-bottom: 4px;
         }
-        .footer-container {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 11px;
-            color: #555;
-            background-color: #ffffff;
-        }
-        .footer-line {
-            border-top: 1px solid #e0e0e0;
-            width: 100%;
-            margin: 0 auto 8px auto;
-        }
     </style>
 </head>
 <body>
+    <htmlpagefooter name="termFooter"><div style="border-top:1px solid #e0e0e0;padding-top:6px;text-align:center;font-size:9px;color:#555555;line-height:1.45;"><strong>Viral Ads Media</strong> | Digital Creative Agency<br>B-27, Budh Vihar Phase 1, New Delhi-86<br>9554491854</div></htmlpagefooter>
+    <sethtmlpagefooter name="termFooter" page="ALL" />
     <div class="page-wrapper">
         <table class="header-table">
             <tr>
@@ -128,13 +118,6 @@
                 </td>
             </tr>
         </table>
-
-        <div class="footer-container">
-            <div class="footer-line"></div>
-            <strong>Viral Ads Media</strong> | Digital Creative Agency<br>
-            B-27, Budh Vihar Phase 1, New Delhi-86<br>
-            9554491854
-        </div>
     </div>
 </body>
 </html>

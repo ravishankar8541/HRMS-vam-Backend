@@ -105,10 +105,11 @@ test('template revision tags invalidate only the documents whose layout changed'
   const legacyHash = type => createHash('sha256').update(type + serialized).digest('hex');
 
   for (const [type, version] of Object.entries({
-    'Salary Slip': 'v3',
-    'Appointment Letter': 'v2',
-    'Increment Letter': 'v2',
-    'Termination Letter': 'v2',
+    'Salary Slip': 'v5',
+    'Appointment Letter': 'v6',
+    'Increment Letter': 'v3',
+    'Termination Letter': 'v4',
+    'FNF Settlement': 'v3',
   })) {
     assert.notEqual(fingerprint(type, data), legacyHash(type), type);
     assert.equal(
@@ -117,7 +118,7 @@ test('template revision tags invalidate only the documents whose layout changed'
       type,
     );
   }
-  for (const type of ['Offer Letter', 'FNF Settlement', 'Onboarding Report']) {
+  for (const type of ['Offer Letter', 'Onboarding Report']) {
     assert.equal(fingerprint(type, data), legacyHash(type), type);
   }
   assert.equal(fingerprint('Salary Slip', {

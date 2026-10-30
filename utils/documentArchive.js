@@ -16,7 +16,7 @@ function fingerprint(type, data) {
   const values = { ...data };
   for (const key of ['updatedAt', '__v', 'emailStatus', 'netPayWords']) delete values[key];
   // Snapshot keys hash record data only, so bump these after a template fix to drop stored PDFs; past deliveries are retained.
-  const templateVersions = { 'Salary Slip': 'v3', 'Appointment Letter': 'v2', 'Increment Letter': 'v2', 'Termination Letter': 'v2' };
+  const templateVersions = { 'Salary Slip': 'v5', 'Appointment Letter': 'v6', 'Increment Letter': 'v3', 'Termination Letter': 'v4', 'FNF Settlement': 'v3' };
   const templateVersion = templateVersions[type] ? `:template-${templateVersions[type]}:` : '';
   return createHash('sha256').update(type + templateVersion + JSON.stringify(values, Object.keys(values).sort())).digest('hex');
 }

@@ -11,8 +11,9 @@ const generateTerminationPDF = require('./terminationPdfGenerator');
  */
 const sendTerminationLetter = async (to, data) => {
   const transporter = { sendMail: options => deliverDocument(options, 'Termination Letter', data.employeeName, data._snapshotId) };
+  const employeeName = data.employeeName || data.name;
   // Ensure we pass the designation and properly formatted date to the PDF generator
-  const pdfBuffer = data._pdfBuffer || await generateTerminationPDF(data);
+  const pdfBuffer = data._pdfBuffer || await generateTerminationPDF({ ...data, name: employeeName, email: data.email || data.employeeEmail, phoneNumber: data.phoneNumber || data.employeePhone });
 
   // Formatting date for the email body to match Viral Ads Media standards
   const formattedDate = data.lastWorkingDate ? new Date(data.lastWorkingDate).toLocaleDateString('en-GB', {
@@ -25,7 +26,7 @@ const sendTerminationLetter = async (to, data) => {
   const emailHtml = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
       <h2 style="color: #d9534f; border-bottom: 2px solid #d9534f; padding-bottom: 10px;">Official Notice: Termination of Employment</h2>
-      <p>Dear <strong>${data.name}</strong>,</p>
+      <p>Dear <strong>${employeeName}</strong>,</p>
 
       <p>This email serves as formal notification regarding the termination of your employment as <strong>${data.designation || 'Employee'}</strong> with <strong>Viral Ads Media</strong>, effective <strong>${formattedDate}</strong>.</p>
 
@@ -52,11 +53,11 @@ const sendTerminationLetter = async (to, data) => {
   const mailOptions = {
     from: `"Viral Ads Media HR" <${process.env.EMAIL_USER}>`,
     to,
-    subject: `Official Notice: Termination of Employment | ${data.name}`,
+    subject: `Official Notice: Termination of Employment | ${employeeName}`,
     html: emailHtml,
     attachments: [{
       // Formats filename as Termination_Letter_FirstName_LastName.pdf
-      filename: `Termination_Letter_${data.name.replace(/\s+/g, '_')}.pdf`,
+      filename: `Termination_Letter_${String(employeeName).replace(/\s+/g, '_')}.pdf`,
       content: pdfBuffer,
     }],
   };

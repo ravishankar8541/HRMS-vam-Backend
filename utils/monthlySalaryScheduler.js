@@ -1,11 +1,23 @@
+const os = require('os');
 const SalarySlip = require('../models/SalarySlip');
 const Employee = require('../models/Employee');
+const AutoRun = require('../models/SalarySlipAutoRun');
 const ensureMonthlySalarySlips = require('./monthlySalarySlips');
 const salaryController = require('../controllers/salaryController');
 const { today } = require('./istDate');
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const CHECK_INTERVAL_MS = 60 * 60 * 1000;
+
+// A pass with failures stays open so the next tick retries only the undelivered people;
+// the bound stops a permanently bad address from re-running for the rest of the month.
+const MAX_ATTEMPTS = 5;
+
+// A claim older than this belongs to a process that died or slept mid-send, so it is
+// safe to take over: anything already emailed is marked Sent and will be skipped.
+const STALE_CLAIM_MS = 2 * 60 * 60 * 1000;
+
+const RUNNER = `${os.hostname()}:${process.pid}`;
 
 const previousMonthKey = ({ year, month }) =>
   month === 0 ? `${MONTHS[11]}/${year - 1}` : `${MONTHS[month - 1]}/${year}`;
@@ -24,13 +36,23 @@ const groupByEmployee = (slips, resolveEmployee) => {
   return groups;
 };
 
-const sendPreviousMonthSalarySlips = async (now = new Date()) => {
-  const monthYear = previousMonthKey(today(now));
+const deliver = async (monthYear, now = new Date()) => {
+  const prepared = await ensureMonthlySalarySlips.ensurePreviousMonth(now);
 
   const activeEmployees = await Employee.find({ status: { $ne: 'Non Active' } })
     .select('_id email empId')
     .lean();
-  if (!activeEmployees.length) return { monthYear, sent: 0, failed: 0 };
+
+  const summary = {
+    monthYear,
+    activeEmployees: activeEmployees.length,
+    created: prepared.created,
+    sent: 0,
+    failed: 0,
+    alreadySent: 0,
+    lastError: null,
+  };
+  if (!activeEmployees.length) return summary;
 
   const byId = new Map();
   const byEmail = new Map();
@@ -42,8 +64,6 @@ const sendPreviousMonthSalarySlips = async (now = new Date()) => {
     const empId = String(employee.empId || '').trim().toUpperCase();
     if (empId) byEmpId.set(empId, employee);
   }
-
-  await ensureMonthlySalarySlips.ensurePreviousMonth(now);
 
   const slips = await SalarySlip.find({
     monthYear,
@@ -64,21 +84,24 @@ const sendPreviousMonthSalarySlips = async (now = new Date()) => {
   };
 
   const groups = groupByEmployee(slips, resolveEmployee);
-  let sent = 0;
-  let failed = 0;
+  const failures = [];
 
   for (const employeeSlips of groups.values()) {
     // One payslip per employee per month: an already-sent copy (including a manual send) wins.
-    if (employeeSlips.some(slip => slip.emailStatus === 'Sent')) continue;
+    if (employeeSlips.some(slip => slip.emailStatus === 'Sent')) {
+      summary.alreadySent += 1;
+      continue;
+    }
 
     // Prefer the newest copy so an edited payslip replaces the auto-generated one.
     const latest = employeeSlips.reduce((newest, slip) => (sentTime(slip) > sentTime(newest) ? slip : newest));
 
     try {
       await salaryController.sendSalarySlipRecord(latest);
-      sent += 1;
+      summary.sent += 1;
     } catch (error) {
-      failed += 1;
+      summary.failed += 1;
+      failures.push(`${latest.employeeEmail}: ${error.message}`);
       console.error(`Auto salary slip email failed for ${latest.employeeEmail} (${monthYear}):`, error.message);
       try {
         latest.emailStatus = 'Failed';
@@ -89,22 +112,92 @@ const sendPreviousMonthSalarySlips = async (now = new Date()) => {
     }
   }
 
-  if (sent || failed) console.log(`Auto payslip emails for ${monthYear}: ${sent} sent, ${failed} failed`);
-  return { monthYear, sent, failed };
+  summary.lastError = failures.length ? failures.slice(0, 5).join(' | ') : null;
+  console.log(
+    `Auto payslip emails for ${monthYear}: ${summary.sent} sent, ${summary.failed} failed, `
+    + `${summary.alreadySent} already delivered (${RUNNER})`
+  );
+  return summary;
 };
 
-let sending = false;
+const claimRun = async (monthYear, now) => {
+  await AutoRun.updateOne(
+    { monthYear },
+    { $setOnInsert: { monthYear, attempts: 0 } },
+    { upsert: true }
+  );
+  return AutoRun.findOneAndUpdate(
+    {
+      monthYear,
+      finishedAt: null,
+      attempts: { $lt: MAX_ATTEMPTS },
+      $or: [{ claimedAt: null }, { claimedAt: { $lt: new Date(now.getTime() - STALE_CLAIM_MS) } }],
+    },
+    { $set: { claimedAt: now, runner: RUNNER }, $inc: { attempts: 1 } },
+    { new: true }
+  );
+};
+
+const releaseRun = async (run, summary) => {
+  const delivered = summary.failed === 0;
+  await AutoRun.updateOne(
+    { _id: run._id },
+    {
+      $set: {
+        sent: summary.sent,
+        failed: summary.failed,
+        alreadySent: summary.alreadySent,
+        activeEmployees: summary.activeEmployees,
+        created: summary.created,
+        lastError: summary.lastError,
+        claimedAt: delivered ? run.claimedAt : null,
+        finishedAt: delivered ? new Date() : null,
+      },
+    }
+  );
+};
+
+const abandonRun = async (run, error) => {
+  await AutoRun.updateOne(
+    { _id: run._id },
+    { $set: { claimedAt: null, lastError: error.message } }
+  );
+};
+
+const skipReason = async monthYear => {
+  const run = await AutoRun.findOne({ monthYear }).lean();
+  if (!run) return 'no-run-record';
+  if (run.finishedAt) return 'delivered';
+  if (run.attempts >= MAX_ATTEMPTS) return 'attempts-exhausted';
+  return 'in-progress';
+};
+
+let running = false;
 
 const runIfDue = async (now = new Date()) => {
-  if (today(now).day !== 1) return { skipped: 'not-first-day' };
-  if (sending) return { skipped: 'already-running' };
-  sending = true;
+  const monthYear = previousMonthKey(today(now));
+  if (running) return { monthYear, skipped: 'already-running' };
+  running = true;
   try {
-    return await sendPreviousMonthSalarySlips(now);
+    const run = await claimRun(monthYear, now);
+    if (!run) return { monthYear, skipped: await skipReason(monthYear) };
+    try {
+      const summary = await deliver(monthYear, now);
+      await releaseRun(run, summary);
+      return summary;
+    } catch (error) {
+      await abandonRun(run, error);
+      console.error(`Auto payslip pass for ${monthYear} aborted:`, error.message);
+      return { monthYear, skipped: 'aborted', error: error.message };
+    }
   } finally {
-    sending = false;
+    running = false;
   }
 };
+
+// HR escape hatch: re-scan the payroll month on demand. It ignores the ledger but keeps
+// the per-employee "already Sent" guard, so nobody receives a duplicate payslip.
+const runNow = (now = new Date()) => deliver(previousMonthKey(today(now)), now);
 
 const start = (intervalMs = CHECK_INTERVAL_MS) => {
   const tick = () => runIfDue().catch(error => console.error('Monthly salary email scheduler error:', error.message));
@@ -114,4 +207,11 @@ const start = (intervalMs = CHECK_INTERVAL_MS) => {
   return timer;
 };
 
-module.exports = { start, runIfDue, sendPreviousMonthSalarySlips, previousMonthKey };
+module.exports = {
+  start,
+  runIfDue,
+  runNow,
+  previousMonthKey,
+  CHECK_INTERVAL_MS,
+  MAX_ATTEMPTS,
+};

@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <style>
       @page {
-    size: A4;
     margin: 0.35in 0.55in;
 }
 
@@ -26,19 +25,19 @@ body {
 }
 
 .logo-box {
-    width: 250px;
+    width: 140px;
 }
 
 .logo {
-    width: 100%;
+    width: 140px;
     height: auto;
 }
 
 .ref-info {
     text-align: right;
-    font-size: 14px;
+    font-size: 11.5px;
     color: #444;
-    font-weight: bold;
+    line-height: 1.5;
 }
 
 .document-title {
@@ -99,16 +98,6 @@ body {
     margin-top: 20px;
 }
 
-.footer {
-    margin-top: 24px;
-    text-align: center;
-    font-size: 13px;
-    border-top: 1px solid #eee;
-    padding-top: 10px;
-    color: #666;
-    width: 100%;
-}
-
 .signature-wrapper {
     margin-top: 60px;
     padding-bottom: 0.2in;
@@ -129,14 +118,16 @@ body {
 </head>
 
 <body>
+    <htmlpagefooter name="apptFooter"><div style="border-top:1px solid #e5e7eb;padding-top:6px;text-align:center;font-size:9px;color:#666666;">Viral Ads Media - Registered Office | B-27, Budh Vihar Phase 1, New Delhi-86 | Tel-9354491934</div></htmlpagefooter>
+    <sethtmlpagefooter name="apptFooter" page="ALL" />
 
     <div>
         <table class="header-table">
             <tr>
                 <td class="logo-box"><img src="<%= logo %>" class="logo"></td>
                 <td class="ref-info">
-                    Ref No: <%= offerId %><br>
-                        Date: <%= currentDate %>
+                    <strong>Ref No:</strong> <%= offerId %><br>
+                        <strong>Date:</strong> <%= currentDate %>
                 </td>
             </tr>
         </table>
@@ -338,9 +329,6 @@ Information.  </div>
                 </tr>
             </table>
         </div>
-    </div>
-    <div class="footer">
-        Viral Ads Media - Registered Office | B-27, Budh Vihar Phase 1, New Delhi-86 | Tel-9354491934
     </div>
     </div>
 

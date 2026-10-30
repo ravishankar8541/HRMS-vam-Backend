@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Salary Payslip - Viral Ads Media</title>
     <style>
-        @page { size: A4 portrait; margin: 8mm 14mm 8mm 14mm; }
+        @page { margin: 8mm 14mm 8mm 14mm; }
         html, body {
             margin: 0; padding: 0;
             background-color: #ffffff;
@@ -14,10 +14,7 @@
             line-height: 1.4;
         }
         .page-wrapper {
-            min-height: 1010px;
             position: relative;
-            box-sizing: border-box;
-            padding-bottom: 35px;
         }
         .header-table {
             width: 100%;
@@ -150,20 +147,11 @@
         .sig-line { border-top: 1.5px solid #000000; margin-top: 4px; margin-bottom: 4px; }
         .sig-title { font-weight: bold; font-size: 10px; color: #000000; }
         .sig-sub { font-size: 8.5px; color: #4b5563; }
-        
-        .footer {
-            position: absolute;
-            bottom: 0px; left: 0; right: 0;
-            border-top: 1px solid #cbd5e1;
-            padding-top: 6px;
-            text-align: center;
-            font-size: 8.5px;
-            color: #475569;
-            background-color: #ffffff;
-        }
     </style>
 </head>
 <body>
+    <htmlpagefooter name="slipFooter"><div style="border-top:1px solid #cbd5e1;padding-top:6px;text-align:center;font-size:8.5px;color:#475569;"><strong>Viral Ads Media</strong> | B-27, Budh Vihar Phase 1, New Delhi - 110086 | Tel: +91 93544 91934 | hr@viraladsmedia.com</div></htmlpagefooter>
+    <sethtmlpagefooter name="slipFooter" page="ALL" />
     <div class="page-wrapper">
         <table class="header-table">
             <tr>
@@ -287,10 +275,6 @@
                 <div class="sig-title">Authorised Signatory</div>
                 <div class="sig-sub">HR Department</div>
             </div>
-        </div>
-
-        <div class="footer">
-            <strong>Viral Ads Media</strong> | B-27, Budh Vihar Phase 1, New Delhi - 110086 | Tel: +91 93544 91934 | hr@viraladsmedia.com
         </div>
     </div>
 </body>

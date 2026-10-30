@@ -62,22 +62,42 @@ exports.previewDocumentPDF = async (req,res) => {
  const buffer = await readPDF(doc);
  res.set({'Content-Type':'application/pdf','Cache-Control':'private, no-store','Content-Disposition':'inline; filename="document.pdf"'}).send(buffer);
 };
-exports.deleteDocument = async (req,res) => {
- if (!isStaff(req.user)) return res.status(403).json({message:'HR access required'});
- if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({message:'Invalid document ID'});
- // Delivery rows can share one PDF asset. Remove only this vault entry.
- const doc = await Delivery.findOneAndUpdate({_id:req.params.id,docType:req.params.type,deletedAt:null}, {$set:{deletedAt:new Date()}}, {new:true});
+// Delivery rows can share one PDF asset. Remove only this vault entry.
+const removeVaultEntry = async (type, id) => {
+ const doc = await Delivery.findOneAndUpdate({_id:id,docType:type,deletedAt:null}, {$set:{deletedAt:new Date()}}, {new:true});
  if (doc) {
   if (doc.docType === 'Salary Slip' && mongoose.isValidObjectId(doc.sourceId))
    await SalarySlip.updateOne({_id:doc.sourceId,hiddenAt:null},{$set:{hiddenAt:new Date()}});
-  return res.json({success:true,message:'Document removed from the vault'});
+  return 'delivery';
  }
  // Auto-prepared payslips do not have a delivery row yet.
- if (req.params.type === 'Salary Slip') {
-  const slip = await SalarySlip.findOneAndUpdate({_id:req.params.id,hiddenAt:null},{$set:{hiddenAt:new Date()}},{new:true});
-  if (slip) return res.json({success:true,message:'Salary slip removed from the vault'});
+ if (type === 'Salary Slip') {
+  const slip = await SalarySlip.findOneAndUpdate({_id:id,hiddenAt:null},{$set:{hiddenAt:new Date()}},{new:true});
+  if (slip) return 'slip';
  }
+ return 'missing';
+};
+exports.deleteDocument = async (req,res) => {
+ if (!isStaff(req.user)) return res.status(403).json({message:'HR access required'});
+ if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({message:'Invalid document ID'});
+ const removed = await removeVaultEntry(req.params.type, req.params.id);
+ if (removed === 'delivery') return res.json({success:true,message:'Document removed from the vault'});
+ if (removed === 'slip') return res.json({success:true,message:'Salary slip removed from the vault'});
  return res.status(404).json({message:'Document not found'});
+};
+exports.bulkDeleteDocuments = async (req,res) => {
+ if (!isStaff(req.user)) return res.status(403).json({message:'HR access required'});
+ const items = req.body.documents;
+ if (!Array.isArray(items) || !items.length || items.length > 100
+  || items.some(i => !i || typeof i.docType !== 'string' || !mongoose.isValidObjectId(i._id)))
+  return res.status(400).json({message:'Select 1–100 valid documents'});
+ let removed = 0;
+ for (const item of items) if (await removeVaultEntry(item.docType, String(item._id)) !== 'missing') removed += 1;
+ const missing = items.length - removed;
+ if (!removed) return res.status(404).json({message:'Documents not found'});
+ return res.json({success:true,removed,missing,message:missing
+  ? `${removed} documents removed from the vault; ${missing} were already gone`
+  : `${removed} documents removed from the vault`});
 };
 exports.bulkDownload = async (req,res) => {
  const items = req.body.documents;

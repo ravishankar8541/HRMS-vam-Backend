@@ -1,39 +1,239 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Full & Final Settlement</title>
-<style>
-@page { size:A4; margin:12mm; }
-* { box-sizing:border-box; }
-body { margin:0; background:#fff; color:#000; font:12px Arial, sans-serif; line-height:1.55; }
-.header { width:100%; border-bottom:2px solid #000; padding-bottom:18px; margin-bottom:22px; }
-.logo { width:235px; height:auto; display:block; }
-.company { text-align:right; font-size:10px; }
-h1 { font-size:21px; margin:0 0 4px; letter-spacing:.5px; }
-.subtitle { margin:0 0 20px; font-size:11px; }
-.details,.amounts { width:100%; border-collapse:collapse; margin-bottom:20px; }
-.details td { width:50%; vertical-align:top; padding:5px 12px 5px 0; overflow-wrap:anywhere; }
-.label { font-weight:bold; }
-.amounts th,.amounts td { border:1px solid #aaa; padding:9px 12px; background:#fff; color:#000; }
-.amounts th { text-align:left; border-bottom:2px solid #000; }
-.amounts td:last-child,.amounts th:last-child { text-align:right; width:32%; font-variant-numeric:tabular-nums; }
-.total td { font-weight:bold; border-top:2px solid #000; border-bottom:2px solid #000; font-size:14px; }
-.authorization { margin-top:26px; break-inside:avoid; }
-.signature { width:145px; height:65px; object-fit:contain; display:block; margin-bottom:4px; }
-.footer { border-top:1px solid #aaa; margin-top:24px; padding-top:10px; font-size:10px; }
-</style></head><body>
-<table class="header"><tr><td><img src="<%= logo %>" class="logo" alt="Viral Ads Media"></td><td class="company"><strong>VIRAL ADS MEDIA</strong><br><%= companyAddress %></td></tr></table>
-<h1>FULL &amp; FINAL SETTLEMENT</h1>
-<p class="subtitle">Date of issue: <%= currentDate %> &nbsp; | &nbsp; Status: <%= status %></p>
-<table class="details"><tr><td><span class="label">Employee name:</span> <%= employeeName %><br><span class="label">Employee ID:</span> <%= employeeId %><br><span class="label">Designation:</span> <%= designation %><br><span class="label">Email:</span> <%= email %><br><span class="label">Phone:</span> <%= phone %></td><td><span class="label">Joining date:</span> <%= dateOfJoining %><br><span class="label">Last working day:</span> <%= lastWorkingDay %><br><span class="label">Bank account:</span> <%= bankAccount %><br><span class="label">IFSC:</span> <%= ifsc %><br><span class="label">Address:</span> <%= address %></td></tr></table>
-<table class="amounts"><thead><tr><th>Particulars</th><th>Amount (INR)</th></tr></thead><tbody>
-<tr><td>Unpaid salary</td><td><%= pendingSalary %></td></tr>
-<tr><td>Leave encashment</td><td><%= leaveEncashment %></td></tr>
-<tr><td>Bonus / performance incentive</td><td><%= incentive %></td></tr>
-<tr><td>Gratuity</td><td><%= gratuity %></td></tr>
-<tr><td>Notice recovery</td><td>− <%= noticeRecovery %></td></tr>
-<tr><td>Other deductions / tax</td><td>− <%= deductions %></td></tr>
-<tr class="total"><td>NET SETTLEMENT AMOUNT</td><td>₹ <%= totalPayable %></td></tr>
-</tbody></table>
-<p>This statement sets out the final employment dues and deductions. A negative net amount represents a recovery due. Payment confirmation is provided separately by payroll.</p>
-<div class="authorization"><img class="signature" src="<%= hrSignature %>" alt="HR Signature"><strong>Authorized Signatory</strong><br>HR &amp; Accounts Department<br>For Viral Ads Media</div>
-<div class="footer">Viral Ads Media &nbsp; | &nbsp; Full &amp; Final Settlement Statement</div>
-</body></html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Full &amp; Final Settlement Statement</title>
+    <style>
+        @page { margin: 10mm 14mm 18mm 14mm; }
+        html, body {
+            margin: 0; padding: 0;
+            background-color: #ffffff;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #111111;
+            font-size: 10px;
+            line-height: 1.5;
+        }
+        .header-table {
+            width: 100%;
+            border-bottom: 3px solid #f27022;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+        }
+        .logo { width: 158px; height: auto; }
+        .logo-fallback { font-size: 20px; font-weight: bold; color: #f27022; letter-spacing: 0.5px; }
+        .company-name { font-size: 15px; font-weight: bold; color: #000000; letter-spacing: 0.5px; }
+        .header-right { text-align: right; vertical-align: middle; font-size: 8.5px; color: #444444; line-height: 1.55; }
+        .header-right .meta { font-size: 9.5px; color: #111111; }
+        .title-block { text-align: center; margin-bottom: 14px; }
+        .title-block h1 { font-size: 18px; font-weight: bold; color: #000000; text-transform: uppercase; letter-spacing: 2.5px; margin: 0; }
+        .title-block .sub { font-size: 10px; color: #555555; margin-top: 4px; }
+        .st-draft { color: #6b7280; font-weight: bold; }
+        .st-approved { color: #1d4ed8; font-weight: bold; }
+        .st-disbursed { color: #047857; font-weight: bold; }
+        .st-settled { color: #065f46; font-weight: bold; }
+        .section-title {
+            font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.2px;
+            color: #f27022; border-left: 4px solid #f27022; padding-left: 8px; margin: 14px 0 7px 0;
+        }
+        table.grid { width: 100%; border-collapse: collapse; }
+        table.grid td { border: 1px solid #d5d8dc; padding: 5px 9px; vertical-align: top; }
+        table.grid td.lbl { background-color: #f7f8f9; color: #374151; font-weight: bold; width: 20%; }
+        table.grid td.val { width: 30%; }
+        table.grid td.span { width: 70%; }
+
+        table.amounts { width: 100%; border-collapse: collapse; }
+        table.amounts th {
+            background-color: #f3f4f6; border: 1px solid #000000; padding: 7px 9px;
+            font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.6px; text-align: left;
+        }
+        table.amounts th.amt { text-align: right; width: 26%; }
+        table.amounts td { border: 1px solid #d5d8dc; border-left: 1px solid #000000; border-right: 1px solid #000000; padding: 5px 9px; }
+        table.amounts td.amt { text-align: right; width: 26%; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        table.amounts tr.grp td {
+            background-color: #fafafa; font-weight: bold; text-transform: uppercase;
+            letter-spacing: 0.7px; font-size: 9px; color: #374151; border-left: 1px solid #000000; border-right: 1px solid #000000;
+        }
+        table.amounts tr.sub td { background-color: #f7f8f9; font-weight: bold; border-top: 1px solid #9aa0a6; }
+        table.amounts tr.net td {
+            background-color: #fff3ea; border-top: 2px solid #f27022; border-bottom: 2px solid #f27022;
+            font-weight: bold; font-size: 11.5px;
+        }
+        table.amounts tr.net td.amt { font-size: 12.5px; }
+        table.amounts tr.words td { font-size: 9.5px; font-style: italic; color: #4b5563; background-color: #fffaf6; border-bottom: 1px solid #000000; }
+
+        table.split { width: 100%; border-collapse: collapse; }
+        table.split td { width: 50%; vertical-align: top; border: none; padding: 0; }
+        table.split td.left { padding-right: 6px; }
+        table.split td.right { padding-left: 6px; }
+        .panel { border: 1px solid #d5d8dc; padding: 9px 11px; }
+        .panel-title {
+            font-size: 9.5px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.9px;
+            color: #f27022; border-bottom: 1.5px solid #f27022; padding-bottom: 4px; margin-bottom: 6px;
+        }
+        .panel table { width: 100%; border-collapse: collapse; }
+        .panel table td { padding: 4px 0; font-size: 9.5px; vertical-align: top; }
+        .panel table td.k { color: #555555; width: 44%; }
+        .panel table td.v { font-weight: bold; color: #111111; }
+        .yes { color: #047857; font-weight: bold; }
+        .no { color: #b91c1c; font-weight: bold; }
+
+        .closing { break-inside: avoid; }
+        .decl {
+            border: 1px solid #d5d8dc; background-color: #fafafa; padding: 9px 12px;
+            font-size: 9px; color: #4b5563; line-height: 1.6; margin-top: 16px; break-inside: avoid;
+        }
+        .decl-title {
+            font-size: 9.5px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.9px;
+            color: #f27022; margin-bottom: 4px;
+        }
+        table.sign { width: 100%; border-collapse: collapse; margin-top: 22px; break-inside: avoid; }
+        table.sign td { width: 100%; vertical-align: bottom; padding: 0; text-align: right; }
+        .sig-company { font-size: 10px; font-weight: bold; margin-bottom: 3px; }
+        .sig-space { height: 50px; }
+        .sig-img { height: 48px; width: auto; }
+        .sig-script { font-family: 'Brush Script MT', 'Segoe Script', cursive; font-size: 22px; color: #1d4ed8; }
+        .sig-line { border-top: 1px solid #111111; margin-top: 4px; }
+        .sig-title { font-size: 9.5px; font-weight: bold; margin-top: 4px; }
+        .sig-sub { font-size: 9px; color: #555555; }
+    </style>
+</head>
+<body>
+    <htmlpagefooter name="fnfFooter">
+        <div style="border-top:1px solid #cbd5e1;padding-top:5px;text-align:center;font-size:7.5px;color:#475569;">
+            <strong>Viral Ads Media</strong> | B-27, Budh Vihar Phase 1, New Delhi - 110086 | Tel: +91 93544 91934 | hr@viraladsmedia.com<br>
+            This is a computer-generated Full &amp; Final Settlement Statement. &nbsp;Page {PAGENO} of {nbpg}
+        </div>
+    </htmlpagefooter>
+    <sethtmlpagefooter name="fnfFooter" page="ALL" />
+
+    <table class="header-table">
+        <tr>
+            <td style="width:50%;vertical-align:middle;">
+                <% if (logo) { %>
+                    <img src="<%= logo %>" alt="Viral Ads Media" class="logo">
+                <% } else { %>
+                    <div class="logo-fallback">VIRAL ADS MEDIA</div>
+                <% } %>
+            </td>
+            <td class="header-right">
+                <div class="company-name">VIRAL ADS MEDIA</div>
+                <div>B-27, Budh Vihar Phase 1, New Delhi - 110086</div>
+                <div class="meta"><strong>Ref No:</strong> <%= refNo %></div>
+                <div class="meta"><strong>Date of Issue:</strong> <%= issueDate %></div>
+                <div class="meta"><strong>Status:</strong> <span class="<%= statusClass %>"><%= status %></span></div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="title-block">
+        <h1>Full &amp; Final Settlement</h1>
+        <div class="sub">
+            Employment account statement for <strong><%= employeeName %></strong> &nbsp;(<%= employeeId %>, <%= designation %>)
+        </div>
+    </div>
+
+    <div class="section-title">Employee &amp; employment details</div>
+    <table class="grid">
+        <tr>
+            <td class="lbl">Employee Name</td><td class="val"><strong><%= employeeName %></strong></td>
+            <td class="lbl">Employee ID</td><td class="val"><strong><%= employeeId %></strong></td>
+        </tr>
+        <tr>
+            <td class="lbl">Designation</td><td class="val"><%= designation %></td>
+            <td class="lbl">Contact Number</td><td class="val"><%= phone %></td>
+        </tr>
+        <tr>
+            <td class="lbl">Date of Joining</td><td class="val"><%= dateOfJoining %></td>
+            <td class="lbl">Last Working Day</td><td class="val"><strong><%= lastWorkingDay %></strong></td>
+        </tr>
+        <tr>
+            <td class="lbl">Total Service</td><td class="val"><%= tenure %></td>
+            <td class="lbl">Official Email</td><td class="val"><%= email %></td>
+        </tr>
+        <tr>
+            <td class="lbl">Registered Address</td><td class="val span" colspan="3"><%= address %></td>
+        </tr>
+    </table>
+
+    <div class="section-title">Settlement breakup</div>
+    <table class="amounts">
+        <thead>
+            <tr><th>Particulars</th><th class="amt">Amount (Rs.)</th></tr>
+        </thead>
+        <tbody>
+            <tr class="grp"><td colspan="2">Amounts payable to employee</td></tr>
+            <% for (let i = 0; i < payableRows.length; i++) { %>
+            <tr><td><%= payableRows[i].label %></td><td class="amt"><%= payableRows[i].amount %></td></tr>
+            <% } %>
+            <tr class="sub"><td>Total payable</td><td class="amt"><%= subTotalPayable %></td></tr>
+            <tr class="grp"><td colspan="2">Deductions &amp; recoveries</td></tr>
+            <% for (let i = 0; i < deductionRows.length; i++) { %>
+            <tr><td><%= deductionRows[i].label %></td><td class="amt"><%= deductionRows[i].amount %></td></tr>
+            <% } %>
+            <tr class="sub"><td>Total deductions</td><td class="amt"><%= subTotalDeductions %></td></tr>
+            <tr class="net"><td><%= netLabel %></td><td class="amt"><%= netAmount %></td></tr>
+            <tr class="words"><td colspan="2">Rupees <%= netWords %> only</td></tr>
+        </tbody>
+    </table>
+
+    <table class="split">
+        <tr>
+            <td class="left">
+                <div class="panel">
+                    <div class="panel-title">Final payout details</div>
+                    <table>
+                        <tr><td class="k">Bank account</td><td class="v"><%= bankAccount %></td></tr>
+                        <tr><td class="k">IFSC code</td><td class="v"><%= ifsc %></td></tr>
+                        <tr><td class="k">Payment mode</td><td class="v">NEFT / RTGS to registered account</td></tr>
+                        <tr><td class="k">Payment reference</td><td class="v"><%= paymentReference %></td></tr>
+                        <tr><td class="k">Disbursed on</td><td class="v"><%= disbursedOn %></td></tr>
+                    </table>
+                </div>
+            </td>
+            <td class="right">
+                <div class="panel">
+                    <div class="panel-title">No-dues &amp; asset clearance</div>
+                    <table>
+                        <% for (const item of clearance) { %>
+                        <tr><td class="k"><%= item.label %></td><td class="v <%= item.css %>"><%= item.value %></td></tr>
+                        <% } %>
+                        <% if (remarks) { %>
+                        <tr><td class="k">Remarks</td><td class="v"><%= remarks %></td></tr>
+                        <% } %>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="closing">
+    <div class="decl">
+        <div class="decl-title">Declaration</div>
+        This statement sets out all amounts payable to and recoverable from the employee towards the full and final
+        settlement of their employment with Viral Ads Media. A negative net figure represents a recovery due to the
+        company. Subject to verification, the approved amount will be credited to the registered bank account above;
+        payroll intimates the credit date separately. Once approved and disbursed, this statement constitutes the
+        complete and final settlement of all employment dues, and any claim raised after disbursement will be adjusted
+        against this settlement.
+    </div>
+
+    <table class="sign">
+        <tr>
+            <td class="right">
+                <div class="sig-company">For Viral Ads Media</div>
+                <div class="sig-space">
+                    <% if (hrSignature) { %>
+                        <img src="<%= hrSignature %>" alt="HR Signature" class="sig-img">
+                    <% } else { %>
+                        <span class="sig-script">HR Signature</span>
+                    <% } %>
+                </div>
+                <div class="sig-line"></div>
+                <div class="sig-title">Authorised Signatory</div>
+                <div class="sig-sub">HR &amp; Accounts Department</div>
+            </td>
+        </tr>
+    </table>
+    </div>
+</body>
+</html>

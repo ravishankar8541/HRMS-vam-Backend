@@ -91,19 +91,6 @@ const sendEmail = async (req, res) => {
       });
     }
 
-    // Prepare data for email/PDF generation
-    const emailData = {
-      name: terminationRecord.employeeName,
-      employeeName: terminationRecord.employeeName, // alias for flexibility
-      designation: terminationRecord.designation,
-      lastWorkingDate: terminationRecord.lastWorkingDate,
-      reason: terminationRecord.reason,
-      hrName: terminationRecord.hrName,
-      phoneNumber: terminationRecord.employeePhone,
-      email: terminationRecord.employeeEmail,
-      // Add more fields if your PDF/email template needs them
-    };
-
     // Send the email (with PDF if generation succeeds)
     await sendTerminationLetter(recipientEmail, await archive.emailData('Termination Letter', terminationRecord));
 
